@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Test - P.A.I. Trucking</title>
+</head>
+<body>
+    <h1>Security Configuration Test</h1>
+    
+    <h2>1. Security Headers</h2>
+    <pre id="headers">Checking headers...</pre>
+    
+    <h2>2. CSRF Protection Test</h2>
+    <button onclick="testCSRF()">Test CSRF Protection</button>
+    <pre id="csrf-result"></pre>
+    
+    <h2>3. Contact Form Test</h2>
+    <form id="test-form">
+        <input type="text" id="name" placeholder="Name" value="Test User" required><br>
+        <input type="email" id="email" placeholder="Email" value="test@example.com" required><br>
+        <textarea id="message" placeholder="Message" required>Testing secure contact form</textarea><br>
+        <button type="submit">Submit Test</button>
+    </form>
+    <pre id="form-result"></pre>
+
+    <script>
+        // Check security headers
+        fetch('/api/health')
+            .then(response => {
+                const headers = [];
+                response.headers.forEach((value, key) => {
+                    if (key.toLowerCase().includes('security') || 
+                        key.toLowerCase().includes('content-type') ||
+                        key.toLowerCase().includes('x-') ||
+                        key.toLowerCase().includes('referrer') ||
+                        key.toLowerCase().includes('permissions')) {
+                        headers.push(`${key}: ${value}`);
+                    }
+                });
+                document.getElementById('headers').textContent = headers.join('\n');
+            });
+
+        // Test CSRF
+        async function testCSRF() {
+            const result = document.getElementById('csrf-result');
+            
+            // First, try without token
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Test',
+                        email: 'test@test.com',
+                        message: 'Test without CSRF token'
+                    })
+                });
+                const data = await response.json();
+                result.textContent = 'Without token: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+            
+            // Now try with token
+            try {
+                // Get CSRF token
+                const tokenResponse = await fetch('/api/csrf-token', {
+                    credentials: 'include'
+                });
+                const tokenData = await tokenResponse.json();
+                
+                result.textContent += '\n\nToken received: ' + tokenData.csrfToken;
+                
+                // Use token
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': tokenData.csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        name: 'Test User',
+                        email: 'test@example.com',
+                        message: 'Test with CSRF token'
+                    })
+                });
+                const data = await response.json();
+                result.textContent += '\n\nWith token: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent += '\n\nError with token: ' + error.message;
+            }
+        }
+
+        // Test form submission
+        document.getElementById('test-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = document.getElementById('form-result');
+            
+            try {
+                // Get CSRF token first
+                const tokenResponse = await fetch('/api/csrf-token', {
+                    credentials: 'include'
+                });
+                const tokenData = await tokenResponse.json();
+                
+                // Submit form with token
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': tokenData.csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        message: document.getElementById('message').value
+                    })
+                });
+                
+                const data = await response.json();
+                result.textContent = 'Form submission result:\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

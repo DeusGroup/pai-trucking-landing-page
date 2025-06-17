@@ -1,0 +1,240 @@
+/* Image Loading and Optimization Styles */
+
+/* Lazy Loading Styles */
+img[data-src],
+picture source[data-srcset],
+[data-bg] {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+img.loaded,
+picture source.loaded,
+[data-bg].loaded {
+    opacity: 1;
+}
+
+/* Loading placeholder */
+.img-container {
+    position: relative;
+    background-color: #f0f0f0;
+    overflow: hidden;
+}
+
+.img-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    to {
+        left: 100%;
+    }
+}
+
+/* Responsive Images */
+.responsive-img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Picture Element Container */
+picture {
+    display: block;
+    width: 100%;
+}
+
+picture img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Aspect Ratio Containers */
+.aspect-ratio-16-9 {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+}
+
+.aspect-ratio-4-3 {
+    position: relative;
+    padding-bottom: 75%; /* 4:3 */
+    height: 0;
+    overflow: hidden;
+}
+
+.aspect-ratio-1-1 {
+    position: relative;
+    padding-bottom: 100%; /* 1:1 */
+    height: 0;
+    overflow: hidden;
+}
+
+.aspect-ratio-16-9 img,
+.aspect-ratio-4-3 img,
+.aspect-ratio-1-1 img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Hero Image Optimization */
+.hero-image {
+    position: relative;
+    width: 100%;
+    height: 60vh;
+    min-height: 400px;
+    max-height: 800px;
+    overflow: hidden;
+}
+
+.hero-image img,
+.hero-image picture {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Service Card Images */
+.service-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+}
+
+/* Gallery Grid */
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem 0;
+}
+
+.gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+/* Background Images with Lazy Loading */
+.bg-image {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+.bg-image[data-bg] {
+    background-color: #f0f0f0;
+}
+
+.bg-image.loaded {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Image Error State */
+img.error {
+    position: relative;
+    min-height: 200px;
+    background-color: #f0f0f0;
+}
+
+img.error::after {
+    content: '⚠️ Image failed to load';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Print Styles */
+@media print {
+    img[data-src] {
+        display: none !important;
+    }
+    
+    img[src] {
+        display: block !important;
+        opacity: 1 !important;
+    }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .hero-image {
+        height: 50vh;
+        min-height: 300px;
+    }
+    
+    .service-image {
+        height: 200px;
+    }
+    
+    .image-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+}
+
+/* Retina Display Support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* High-DPI specific styles if needed */
+}
+
+/* WebP Support Detection */
+.webp .webp-bg {
+    /* Styles for browsers that support WebP */
+}
+
+.no-webp .webp-bg {
+    /* Fallback styles for browsers without WebP support */
+}

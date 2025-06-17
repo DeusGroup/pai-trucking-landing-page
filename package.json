@@ -5,13 +5,17 @@
   "main": "server/app.js",
   "scripts": {
     "start": "node server/app.js",
+    "start:secure": "node server/app-secure.js",
     "dev": "nodemon server/app.js",
+    "dev:secure": "nodemon server/app-secure.js",
     "client": "python3 -m http.server 8000",
-    "build": "echo 'No build step required for static frontend'",
+    "build": "npm run optimize-images",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint server/ --ext .js",
-    "format": "prettier --write server/"
+    "format": "prettier --write server/",
+    "optimize-images": "node scripts/optimize-images.js",
+    "setup-images": "mkdir -p images/original images/optimized"
   },
   "keywords": [
     "trucking",
@@ -45,6 +49,7 @@
     "jest": "^29.6.2",
     "nodemon": "^3.0.1",
     "prettier": "^3.0.0",
+    "sharp": "^0.34.2",
     "supertest": "^6.3.3"
   },
   "engines": {
