@@ -48,3 +48,6 @@ build/
 # Temporary files
 .tmp/
 temp/
+
+# Claude settings
+.claude/settings.local.json
