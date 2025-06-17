@@ -17,6 +17,10 @@ pids
 .env.test.local
 .env.production.local
 
+# Backend specific
+server/logs/
+*.log
+
 # Logs
 logs
 *.log

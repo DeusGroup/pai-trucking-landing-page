@@ -102,22 +102,7 @@ function initializeContactForm() {
 
             // Form validation
             if (validateForm(this)) {
-                // Submit to Netlify
-                const formData = new FormData(this);
-                
-                fetch('/', {
-                    method: 'POST',
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: new URLSearchParams(formData).toString()
-                })
-                .then(() => {
-                    showNotification('Thank you for your quote request! We will contact you within 24 hours.', 'success');
-                    this.reset();
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showNotification('There was an error submitting your request. Please try again or call us directly.', 'error');
-                });
+                submitFormToBackend(this);
             }
         });
 
@@ -427,6 +412,91 @@ const debouncedScrollHandler = debounce(function() {
 }, 100);
 
 window.addEventListener('scroll', debouncedScrollHandler);
+
+// Backend Form Submission
+async function submitFormToBackend(form) {
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    
+    try {
+        // Disable submit button and show loading state
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+        
+        // Collect form data
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        // API endpoint (use localhost in development, relative path in production)
+        const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000/api/contact'
+            : '/api/contact';
+        
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showNotification(result.message || 'Thank you for your quote request! We will contact you within 24 hours.', 'success');
+            form.reset();
+            
+            // Track successful form submission
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'form_submit', {
+                    'event_category': 'Contact',
+                    'event_label': 'Quote Request',
+                    'value': 1
+                });
+            }
+        } else {
+            // Handle validation errors or server errors
+            const errorMessage = result.message || 'There was an error submitting your request. Please try again.';
+            showNotification(errorMessage, 'error');
+            
+            // Log validation errors for debugging
+            if (result.errors && Array.isArray(result.errors)) {
+                console.warn('Form validation errors:', result.errors);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Form submission error:', error);
+        
+        // Fallback to Netlify Forms if backend is not available
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            try {
+                await submitToNetlify(form);
+                showNotification('Thank you for your quote request! We will contact you within 24 hours.', 'success');
+                form.reset();
+            } catch (netlifyError) {
+                showNotification('There was an error submitting your request. Please try again or call us directly at (718) 712-2700.', 'error');
+            }
+        } else {
+            showNotification('Unable to connect to server. Please try again or call us directly at (718) 712-2700.', 'error');
+        }
+    } finally {
+        // Re-enable submit button
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    }
+}
+
+// Fallback to Netlify Forms
+async function submitToNetlify(form) {
+    const formData = new FormData(form);
+    
+    await fetch('/', {
+        method: 'POST',
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(formData).toString()
+    });
+}
 
 // Lazy Loading for Images (if needed)
 function initializeLazyLoading() {
